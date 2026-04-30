@@ -1,37 +1,58 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "customManagers": [
-    {
-      "customType": "regex",
-      "datasourceTemplate": "{{#if (equals datasource 'github')}}github-tags{{else}}{{{datasource}}}{{/if}}",
-      "managerFilePatterns": ["/^.*$/"],
-      "matchStrings": [
-        "\\s*#\\s?renovate: (?<datasource>.*?)=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+[\\w+\\.\\-]+(?:[:=]|\\s+\\S+)\\s*[\\\"']?(?<currentValue>[\\w+\\.\\-]*)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"']?"
-      ],
-      "versioningTemplate": "{{#if (equals datasource 'docker')}}docker{{else if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
-    }
-  ],
   "extends": [
-    "config:recommended",
+    ":approveMajorUpdates",
     ":configMigration",
     ":dependencyDashboard",
     ":enableVulnerabilityAlerts",
     ":ignoreModulesAndTests",
     ":maintainLockFilesWeekly",
+    ":prConcurrentLimit10",
     ":rebaseStalePrs",
     ":semanticPrefixFixDepsChoreOthers",
     ":separateMultipleMajorReleases",
+    "config:recommended",
     "group:monorepos",
     "group:recommended",
     "helpers:pinGitHubActionDigests",
     "replacements:all",
     "workarounds:all"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "{{#if (equals datasource 'github')}}github-tags{{else}}{{{datasource}}}{{/if}}",
+      "fileMatch": ["^.*$"],
+      "matchStrings": [
+        "\\s*#\\s?renovate: (?<datasource>.*?)=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+[\\w+\\.\\-]+(?:[:=]|\\s+\\S+)\\s*[\\\"']?(?<currentValue>[\\w+\\.\\-]*)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"']?"
+      ],
+      "versioningTemplate": "{{#if (equals datasource 'docker')}}docker{{else if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    }
+  ],
   "packageRules": [
     {
       "automerge": true,
       "automergeStrategy": "rebase",
-      "matchUpdateTypes": ["patch", "pin", "pinDigest", "lockFileMaintenance", "digest"]
+      "matchUpdateTypes": ["patch", "pin", "lockFileMaintenance", "digest"]
+    },
+    {
+      "description": "Use build(deps) for all updates (overrides :semanticPrefixFixDepsChoreOthers)",
+      "matchPackageNames": ["*"],
+      "semanticCommitType": "build"
+    },
+    {
+      "description": "Group all non-major updates into one PR (vulnerability alerts opt out via top-level vulnerabilityAlerts)",
+      "matchUpdateTypes": ["patch", "digest"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "non-major-deps"
     }
-  ]
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "groupName": null,
+    "groupSlug": null,
+    "schedule": [],
+    "semanticCommitType": "feat",
+    "semanticCommitScope": "deps-security"
+  }
 }
