@@ -31,16 +31,6 @@
   ],
   "packageRules": [
     {
-      "automerge": true,
-      "automergeStrategy": "rebase",
-      "matchUpdateTypes": ["patch", "pin", "lockFileMaintenance", "digest"]
-    },
-    {
-      "description": "Use build(deps) for all updates (overrides :semanticPrefixFixDepsChoreOthers)",
-      "matchPackageNames": ["*"],
-      "semanticCommitType": "build"
-    },
-    {
       "description": "Group all non-major updates into one PR (vulnerability alerts opt out via top-level vulnerabilityAlerts)",
       "matchUpdateTypes": ["patch", "digest"],
       "groupName": "non-major dependencies",
