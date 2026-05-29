@@ -33,7 +33,7 @@
   ],
   "packageRules": [
     {
-      "automerge": true,
+      "automerge": false,
       "automergeStrategy": "rebase",
       "matchUpdateTypes": [
         "patch",
