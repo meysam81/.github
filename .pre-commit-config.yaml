@@ -11,7 +11,6 @@ repos:
         args: ["--maxkb=5000"]
         exclude: |
           (?x)^(
-            assets/.*
           )$
       - id: check-ast
       - id: check-executables-have-shebangs
@@ -56,9 +55,6 @@ repos:
           - --autofix
         exclude: |
           (?x)^(
-            manifest.json|
-            .oxlintrc.json|
-            renovate.json
           )$
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.24.0
@@ -70,20 +66,3 @@ repos:
     rev: v8.30.1
     hooks:
       - id: gitleaks
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.11
-    hooks:
-      - id: actionlint
-  - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.9
-    hooks:
-      - id: dockerfmt
-        args:
-          - --indent=4
-  - repo: local
-    hooks:
-      - id: prettier
-        name: prettier
-        language: system
-        pass_filenames: true
-        entry: bunx prettier -u --write
