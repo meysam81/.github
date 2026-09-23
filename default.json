@@ -60,6 +60,9 @@
     }
   ],
   "rebaseWhen": "conflicted",
+  "schedule": [
+    "before 6am on monday"
+  ],
   "vulnerabilityAlerts": {
     "enabled": true,
     "groupName": null,
