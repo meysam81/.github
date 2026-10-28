@@ -51,6 +51,20 @@
       "semanticCommitType": "build"
     },
     {
+      "description": "Bump the go.mod go directive to each Go release (Renovate reads it as a minimum and skips it by default); Go releases skip the release-age wait so security point releases land promptly",
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDepTypes": [
+        "golang"
+      ],
+      "matchManagers": [
+        "gomod"
+      ],
+      "minimumReleaseAge": "0 days",
+      "rangeStrategy": "bump"
+    },
+    {
       "description": "Group all non-major updates into one PR (vulnerability alerts opt out via top-level vulnerabilityAlerts)",
       "groupName": "non-major dependencies",
       "groupSlug": "non-major-deps",
