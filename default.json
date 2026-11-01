@@ -74,6 +74,9 @@
       ]
     }
   ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
   "rebaseWhen": "conflicted",
   "schedule": [
     "before 6am on monday"
