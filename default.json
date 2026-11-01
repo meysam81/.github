@@ -83,7 +83,6 @@
       ]
     }
   ],
-  "prConcurrentLimit": 50,
   "rebaseWhen": "conflicted",
   "schedule": [
     "before 6am on monday"
