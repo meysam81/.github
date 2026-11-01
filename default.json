@@ -65,6 +65,16 @@
       "rangeStrategy": "bump"
     },
     {
+      "description": "Digest pins and lock-file refreshes carry security fixes (rebuilt images, patched transitive deps): when the hourly limit queues PRs, create these first",
+      "matchUpdateTypes": [
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance"
+      ],
+      "prPriority": 5
+    },
+    {
       "description": "Group all non-major updates into one PR (vulnerability alerts opt out via top-level vulnerabilityAlerts)",
       "groupName": "non-major dependencies",
       "groupSlug": "non-major-deps",
