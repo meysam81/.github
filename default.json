@@ -19,7 +19,7 @@
     ":enableVulnerabilityAlerts",
     ":ignoreModulesAndTests",
     ":maintainLockFilesWeekly",
-    ":prConcurrentLimit10",
+    ":prConcurrentLimitNone",
     ":rebaseStalePrs",
     ":semanticPrefixFixDepsChoreOthers",
     ":separateMultipleMajorReleases",
