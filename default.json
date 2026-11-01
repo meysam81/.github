@@ -19,6 +19,7 @@
     ":enableVulnerabilityAlerts",
     ":ignoreModulesAndTests",
     ":maintainLockFilesWeekly",
+    ":prConcurrentLimitNone",
     ":rebaseStalePrs",
     ":semanticPrefixFixDepsChoreOthers",
     ":separateMultipleMajorReleases",
@@ -83,6 +84,9 @@
       ]
     }
   ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
   "rebaseWhen": "conflicted",
   "schedule": [
     "before 6am on monday"
@@ -93,6 +97,6 @@
     "groupSlug": null,
     "schedule": [],
     "semanticCommitScope": "deps-security",
-    "semanticCommitType": "feat"
+    "semanticCommitType": "fix"
   }
 }
