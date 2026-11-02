@@ -31,6 +31,9 @@
     "workarounds:all"
   ],
   "minimumReleaseAge": "14 days",
+  "nix": {
+    "enabled": true
+  },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
