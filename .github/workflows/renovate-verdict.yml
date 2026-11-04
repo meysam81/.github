@@ -7,7 +7,7 @@ name: renovate-verdict
 #
 #   jobs:
 #     verdict:
-#       uses: meysam81/.github/.github/workflows/renovate-verdict.yml@<sha> # main
+#       uses: meysam81/.github/.github/workflows/renovate-verdict.yml@<sha> # v1.0.0
 #       permissions:
 #         contents: read
 #         pull-requests: write
