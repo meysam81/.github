@@ -1,0 +1,142 @@
+name: renovate-verdict
+
+# Called on pull_request by a repo's own workflow. `checks` handles the PR's
+# files with a read-only token and no secrets. `post` holds the write token and
+# never checks out the PR. Design: dmarcguard-pro
+# docs/development/1793532559-infra-ci-deploy.md, "Dependency PR verdict".
+#
+#   jobs:
+#     verdict:
+#       uses: meysam81/.github/.github/workflows/renovate-verdict.yml@<sha> # main
+#       permissions:
+#         contents: read
+#         pull-requests: write
+#       with:
+#         flux-root: k8s/gitops
+on:
+  workflow_call:
+    inputs:
+      flux-root:
+        description: Directory holding the Flux Kustomizations, e.g. k8s/gitops
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  checks:
+    name: verdict checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      # renovate: github-releases=opentofu/opentofu
+      TOFU_VERSION: 1.12.6
+      # renovate: github-releases=oven-sh/bun
+      BUN_VERSION: 1.4.2
+    steps:
+      # The default ref is the PR merged into main, so HEAD^1 is that main.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: head
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: shared
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+      - run: pip install pyyaml==6.0.3
+      - name: main as a second tree
+        run: git -C head worktree add -q ../base HEAD^1
+      - name: what this PR touches
+        id: plan
+        run: python3 shared/verdict/verdict.py plan --head head --base base
+      - name: kubernetes tools
+        if: steps.plan.outputs.k8s == 'true'
+        run: shared/verdict/install-tools.sh "$RUNNER_TEMP/bin" k8s
+      - name: ansible
+        if: steps.plan.outputs.ansible == 'true'
+        run: |
+          pip install -r head/requirements.txt
+          pip show ansible-lint > /dev/null || pip install ansible-lint==26.10.1
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        if: steps.plan.outputs.tofu == 'true'
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+          tofu_wrapper: false
+      - name: terragrunt
+        if: steps.plan.outputs.tofu == 'true'
+        run: shared/verdict/install-tools.sh "$RUNNER_TEMP/bin" tofu
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        if: steps.plan.outputs.nix == 'true'
+      - name: poetry
+        if: steps.plan.outputs.poetry == 'true'
+        run: pip install "poetry==$(sed -n '1s/.*Poetry \([0-9.]*\).*/\1/p' head/poetry.lock)"
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: steps.plan.outputs.bun == 'true'
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: verdict
+        env:
+          FLUX_ROOT: ${{ inputs.flux-root }}
+        run: |
+          PATH="$RUNNER_TEMP/bin:$PATH" python3 shared/verdict/verdict.py run \
+            --head head --base base --flux-root "$FLUX_ROOT" --out out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: verdict
+          path: out/
+          retention-days: 3
+
+  post:
+    name: verdict comment and label
+    needs: checks
+    if: ${{ !cancelled() && github.event.pull_request.user.login == 'renovate[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: verdict
+          path: out
+      - name: read the verdict
+        id: read
+        run: |
+          level=$(jq -r .level out/verdict.json)
+          case "$level" in safe | review | blocked) ;; *) exit 1 ;; esac
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "level=$level"
+            echo "body<<$delimiter"
+            cat out/verdict.md
+            echo
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+      - uses: meysam81/comment-pr@45a518b456b98d39f8ae59a0b20fea50f431e492 # v1.1.0
+        with:
+          title: "## Dependency verdict"
+          content: ${{ steps.read.outputs.body }}
+          token: ${{ github.token }}
+      - name: label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          LEVEL: ${{ steps.read.outputs.level }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          for level in safe review blocked; do
+            gh label create "verdict-$level" --description "Dependency verdict: $level" 2> /dev/null || true
+            if [ "$level" != "$LEVEL" ]; then
+              gh api -X DELETE "repos/$GH_REPO/issues/$NUMBER/labels/verdict-$level" > /dev/null 2>&1 || true
+            fi
+          done
+          gh api -X POST "repos/$GH_REPO/issues/$NUMBER/labels" -f "labels[]=verdict-$LEVEL" > /dev/null
