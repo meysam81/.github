@@ -16,6 +16,7 @@
   "extends": [
     ":configMigration",
     ":dependencyDashboard",
+    ":enablePreCommit",
     ":enableVulnerabilityAlerts",
     ":ignoreModulesAndTests",
     ":maintainLockFilesWeekly",
@@ -84,6 +85,38 @@
       "matchUpdateTypes": [
         "patch",
         "digest"
+      ]
+    },
+    {
+      "description": "Pin image digests in Dockerfiles, compose files and workflow containers: a tag can be re-pushed, a digest cannot. Kubernetes, kustomize and Helm images stay with each repo's own rules",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchManagers": [
+        "dockerfile",
+        "docker-compose",
+        "github-actions"
+      ],
+      "pinDigests": true
+    },
+    {
+      "description": "Digest updates wait 3 days, not 14 (rebuilt images carry security fixes), and do not wait forever where the registry gives no timestamp (ghcr.io, gcr.io, quay.io)",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pinDigest"
+      ],
+      "minimumReleaseAge": "3 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
+    },
+    {
+      "description": "pre-commit hooks move together, in one PR per repo. Renovate keeps a frozen rev (commit SHA with a '# frozen: <tag>' comment) frozen; it cannot freeze a tag itself",
+      "groupName": "pre-commit hooks",
+      "groupSlug": "pre-commit-hooks",
+      "matchManagers": [
+        "pre-commit"
       ]
     }
   ],
