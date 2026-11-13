@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/meysam81/.github/compare/v1.0.0...v1.1.0) (2026-11-13)
+
+
+### Features
+
+* **renovate:** pin image digests in Dockerfiles, compose files and workflows, and manage pre-commit hooks ([#9](https://github.com/meysam81/.github/issues/9)) ([6da48a1](https://github.com/meysam81/.github/commit/6da48a18e0b0f06a91856208b6f3a74af840b8ed))
+
 ## 1.0.0 (2026-11-05)
 
 
